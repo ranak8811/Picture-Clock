@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Number Clock with Sounds</title>
+
+    <!-- Tailwind and DaisyUI -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-size: cover;
+        backdrop-filter: blur(10px);
+      }
+
+      .clock-container {
+        width: 60%;
+        text-align: center;
+        color: black;
+      }
+
+      .time-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .time-section {
+        width: 180px;
+        height: 180px;
+      }
+
+      .seconds {
+        margin-top: 30px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .am-pm-date {
+        margin-top: 20px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+      }
+
+      .am-pm,
+      .date {
+        font-size: 2rem;
+      }
+
+      .weather {
+        font-size: 1.2rem;
+        margin-top: 10px;
+      }
+
+      .mode-toggle,
+      .theme-toggle {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+      }
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="clock-container">
+      <!-- Time Display -->
+      <div class="time-row">
+        <div class="time-section" id="hourTens"></div>
+        <div class="time-section" id="hourOnes"></div>
+        <span>:</span>
+        <div class="time-section" id="minuteTens"></div>
+        <div class="time-section" id="minuteOnes"></div>
+      </div>
+
+      <div class="seconds">
+        <div class="time-section" id="secondTens"></div>
+        <div class="time-section" id="secondOnes"></div>
+      </div>
+
+      <!-- AM/PM and Date Display -->
+      <div class="am-pm-date">
+        <div class="am-pm" id="amPmDisplay">AM</div>
+        <div class="date" id="dateDisplay">October 13, 2024</div>
+        <div class="weather" id="weatherDisplay">Loading weather...</div>
+      </div>
+
+      <!-- Mode and Theme Toggles -->
+      <div class="mode-toggle">
+        <button id="toggleMode" class="btn btn-outline">
+          Switch to 24-Hour Mode
+        </button>
+        <button id="toggleTheme" class="btn btn-outline">Toggle Theme</button>
+      </div>
+    </div>
+
+    <!-- Sound Effects -->
+    <audio id="secondSound" src="sounds/second_tick.wav"></audio>
+    <audio id="minuteSound" src="sounds/minute_change.wav"></audio>
+    <audio id="hourSound" src="sounds/hour_change.mp3"></audio>
+
+    <script>
+      const hourTens = document.getElementById("hourTens");
+      const hourOnes = document.getElementById("hourOnes");
+      const minuteTens = document.getElementById("minuteTens");
+      const minuteOnes = document.getElementById("minuteOnes");
+      const secondTens = document.getElementById("secondTens");
+      const secondOnes = document.getElementById("secondOnes");
+      const amPmDisplay = document.getElementById("amPmDisplay");
+      const dateDisplay = document.getElementById("dateDisplay");
+      const weatherDisplay = document.getElementById("weatherDisplay");
+      const toggleModeButton = document.getElementById("toggleMode");
+      const toggleThemeButton = document.getElementById("toggleTheme");
+
+      const secondSound = document.getElementById("secondSound");
+      const minuteSound = document.getElementById("minuteSound");
+      const hourSound = document.getElementById("hourSound");
+
+      let is24HourMode = false;
+      let isLightTheme = true;
+
+      let previousMinute = new Date().getMinutes();
+      let previousHour = new Date().getHours();
+
+      const updateClock = () => {
+        const now = new Date();
+        let hours = now.getHours();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        const isAm = hours < 12;
+
+        // Play sound every second
+        secondSound.play();
+
+        // Check if minute has changed
+        if (minutes !== previousMinute) {
+          minuteSound.play();
+          previousMinute = minutes;
+        }
+
+        // Check if hour has changed
+        if (hours !== previousHour) {
+          hourSound.play();
+          previousHour = hours;
+        }
+
+        if (!is24HourMode) {
+          hours = hours % 12 || 12;
+        }
+
+        // Update Time
+        hourTens.innerHTML = `<img src="images/${Math.floor(
+          hours / 10
+        )}.jpeg" alt="hour tens">`;
+        hourOnes.innerHTML = `<img src="images/${
+          hours % 10
+        }.jpeg" alt="hour ones">`;
+        minuteTens.innerHTML = `<img src="images/${Math.floor(
+          minutes / 10
+        )}.jpeg" alt="minute tens">`;
+        minuteOnes.innerHTML = `<img src="images/${
+          minutes % 10
+        }.jpeg" alt="minute ones">`;
+        secondTens.innerHTML = `<img src="images/${Math.floor(
+          seconds / 10
+        )}.jpeg" alt="second tens">`;
+        secondOnes.innerHTML = `<img src="images/${
+          seconds % 10
+        }.jpeg" alt="second ones">`;
+
+        // Update AM/PM
+        amPmDisplay.textContent = is24HourMode ? "" : isAm ? "AM" : "PM";
+
+        // Update Date
+        dateDisplay.textContent = now.toDateString();
+      };
+
+      // Toggle between 12 and 24-hour mode
+      toggleModeButton.addEventListener("click", () => {
+        is24HourMode = !is24HourMode;
+        toggleModeButton.textContent = is24HourMode
+          ? "Switch to 12-Hour Mode"
+          : "Switch to 24-Hour Mode";
+        updateClock();
+      });
+
+      // Toggle between light and dark theme
+      toggleThemeButton.addEventListener("click", () => {
+        isLightTheme = !isLightTheme;
+        document.body.setAttribute(
+          "data-theme",
+          isLightTheme ? "light" : "dark"
+        );
+      });
+
+      // Change background color every 10 seconds
+      const changeBackgroundColor = () => {
+        const randomColor = `hsl(${Math.random() * 360}, 100%, 85%)`;
+        document.body.style.backgroundColor = randomColor;
+      };
+
+      setInterval(changeBackgroundColor, 5000);
+
+      // Fetch weather information for Dhaka
+      const fetchWeather = async () => {
+        const apiKey = "YOUR_API_KEY";
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=Dhaka&appid=${apiKey}&units=metric`;
+
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+          const { main, weather } = data;
+          const temperature = main.temp;
+          const weatherCondition = weather[0].description;
+          weatherDisplay.textContent = `Weather: ${temperature}°C, ${weatherCondition}`;
+        } catch (error) {
+          weatherDisplay.textContent = "Unable to fetch weather";
+        }
+      };
+
+      fetchWeather();
+
+      setInterval(updateClock, 1000);
+    </script>
+  </body>
+</html>
